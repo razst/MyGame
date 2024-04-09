@@ -3,12 +3,12 @@ import sys
 from pygame.locals import *
 import random
 
-MOVE_SPEED = 30
+MOVE_SPEED = 10
 MAX_PALYERS = 2
 LEFT_LANE_X = 100
 RIGHT_LANE_X = 380
 PLAYER_SPEED = 1
-
+GAME_OVER_TOLERANCE = 5
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((562,600))
 
@@ -23,6 +23,20 @@ car_y = screen.get_height() - car.get_size()[1]
 players = []
 
 
+
+def check_end_game():
+    for player_car in players:
+        y1 = player_car[1] + car_red.get_size()[1] - GAME_OVER_TOLERANCE 
+        x1 = player_car[0] + GAME_OVER_TOLERANCE
+        x2 = player_car[0]+car_red.get_size()[0] - GAME_OVER_TOLERANCE
+        x3 = car_x + GAME_OVER_TOLERANCE
+        x4 = car_x+car.get_size()[0] - GAME_OVER_TOLERANCE
+        if y1 > car_y: 
+            if (x3<x2 and x3>x1) or (x3<x1 and x4>x1):
+                return True
+    return False
+
+
 def findTopPlayerY():
     global players
     min_y=screen.get_height()
@@ -33,11 +47,17 @@ def findTopPlayerY():
     return min_y 
 
 
-# def removePlayers():
-#     global players
-#     for car in players:
-#         if car[1]>screen.get_height()-car.get_size()[1]:
-#             players.remove()
+def removePlayers():
+    global players
+    i=0
+    for car in players:
+        if car[1]>screen.get_height():
+            players.pop(i)
+            break
+        i+=1
+    print(players)
+
+
 def generatePalyers():
     global players
     if (findTopPlayerY()> car.get_size()[1]) and (len(players)<MAX_PALYERS):
@@ -51,7 +71,6 @@ def generatePalyers():
 
 
 def showPlayers():
-    print(players)
     global screen
     for car in players:
         screen.blit(car_red, (car[0],car[1]))
@@ -86,11 +105,14 @@ while True:
                 car_x += MOVE_SPEED
     
     screen.blit(bg,(0,0))
+    removePlayers()
     movePlayers()
     generatePalyers()
     showPlayers()
     check_boundries()
     screen.blit(car, (car_x,car_y))
+    if check_end_game():
+        break
 
 
     pygame.display.update()
